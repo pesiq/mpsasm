@@ -38,21 +38,10 @@ SECTION .text
     ; comlete task
     ; temporarily - outputs array (in reverse?)
     ;should comlete task
-    call _calculate  
+    ;call _calculate  
 
     ; output result
     call _printRes 
-
-
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, SizePrompt ; message
-    mov rdx, SizePromptLen ; message len
-    syscall
-
-    
-
-
 
     ; terminate program
     mov eax, 1 ; exit syscall
@@ -66,10 +55,11 @@ _getSize:
     mov rdx, SizePromptLen; message len
     syscall
 
+_input:
     mov rax, 0 ;sysread
     mov rdi, 0 ;stdin
-    mov rsi, QWORD [size] ; write into reserved bytes
-    mov rdx, 16 ; size of input
+    mov rsi, size ; write into reserved bytes
+    mov rdx, 64 ; size of input
     syscall
     ret
 
@@ -82,7 +72,7 @@ _printSize:
 
     mov rax, 1 ; syswrite
     mov rdi, 1 ; stdout
-    mov rsi, QWORD [size] ; message
+    mov rsi, size ; message
     mov rdx, 64; message len
     syscall
 
@@ -96,31 +86,39 @@ _printSize:
 _printRes:
     mov rax, 1 ; syswrite
     mov rdi, 1 ; stdout
-    mov rsi, QWORD [size] ; message
+    mov rsi, size ; message
     mov rdx, 64 ; message len
     syscall
     ret
 
 _getVector:
-    mov rcx, QWORD [size] ; move store size of array for dec
+    mov rcx, size ; move store size of array for dec
 
-    loopIn:
-    mov rax, 0 ;sysread
-    mov rdi, 0 ;stdin
-    mov rsi, QWORD [temp] ; adress to write into reserved bytes
-    mov rdx, 16 ; size of input
+    mov rax, 1 ; syswrite
+    mov rdi, 1 ; stdout
+    mov rsi, rcx ; message
+    mov rdx, 64 ; message len
     syscall
-    mov rdx, QWORD [temp]
-    push rdx
-    dec rcx
-    cmp rcx, 0
-    jz loopIn
+
+    ; loop to input each element
+    ;loopIn:
+    ;mov rax, 0 ;sysread
+    ;mov rdi, 0 ;stdin
+    ;mov rsi, temp ; adress to write reserved bytes into 
+    ;mov rdx, 16 ; size of input
+    ;syscall
+;
+    ;mov rdx, [temp]
+    ;push rdx
+    ;dec rcx
+    ;cmp rcx, 0
+    ;jz loopIn
     ret
 
 
 _calculate:
 
-    mov rcx, QWORD [size] ; move store size of array for dec
+    mov rcx, size ; move store size of array for dec
     loopCalc:
     pop rdx ; pop into temp
     mov rax, 1 ;syswrite
