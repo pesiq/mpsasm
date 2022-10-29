@@ -86,18 +86,11 @@ _getSize:
 _printSize:
 
     writeline SizePrompt2, SizePrompt2Len
-
     writeline size, 2
-
     writeline ElementPrompt, ElementPromptLen
-
     ret
 
-_printRes:
-
-    writeline size, 1
-    ret
-
+_calculate:
 
 
 _getVector:
