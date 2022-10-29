@@ -1,9 +1,9 @@
 
 SECTION .bss
-    size resq 1
-    temp resq 1
-    min resq 1
-    max resq 1
+    size: resb 1
+    temp: resq 1
+    min: resq 1
+    max: resq 1
 
 SECTION .data
     SizePrompt: db "Enter size of array: "
@@ -21,6 +21,24 @@ SECTION .data
 
 
 SECTION .text
+
+%macro read 2
+    mov rax, 0 ;sysread
+    mov rdi, 0 ;stdin
+    mov rsi, %1 ; write into reserved bytes
+    mov rdx, %2 ; size of input
+    syscall
+%endmacro
+
+%macro writeline 2
+    mov rax, 1 ;sysread
+    mov rdi, 1 ;stdin
+    mov rsi, %1 ; ptr to message
+    mov rdx, %2 ; size message
+    syscall
+%endmacro
+
+
     global _start ; entry point??
 
     _start:
@@ -33,7 +51,7 @@ SECTION .text
     
     ; input vector
     ; puts user input in stack?
-    call _getVector
+    ;call _getVector
 
     ; comlete task
     ; temporarily - outputs array (in reverse?)
@@ -41,7 +59,8 @@ SECTION .text
     ;call _calculate  
 
     ; output result
-    call _printRes 
+    ;call _printRes 
+
 
     ; terminate program
     mov eax, 1 ; exit syscall
@@ -49,38 +68,18 @@ SECTION .text
     int 80h    ; call kernel
 
 _getSize:
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, SizePrompt ; message
-    mov rdx, SizePromptLen; message len
-    syscall
-
-_input:
-    mov rax, 0 ;sysread
-    mov rdi, 0 ;stdin
-    mov rsi, size ; write into reserved bytes
-    mov rdx, 64 ; size of input
-    syscall
+    writeline SizePrompt, SizePromptLen
+    read size, 8
     ret
 
 _printSize:
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, SizePrompt2 ; message
-    mov rdx, SizePrompt2Len; message len
-    syscall
 
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, size ; message
-    mov rdx, 64; message len
-    syscall
+    writeline SizePrompt2, SizePrompt2Len
 
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, ElementPrompt ; message
-    mov rdx, ElementPromptLen; message len
-    syscall
+    writeline size, 8
+
+    writeline ElementPrompt, ElementPromptLen
+
     ret
 
 _printRes:
@@ -91,9 +90,16 @@ _printRes:
     syscall
     ret
 
+
+
 _getVector:
     mov rcx, size ; move store size of array for dec
 
+    ;использую 64 битные регистры, чтобы сохранить адрес.
+    ;если машина <64 бит, то наверное можно использовать секции .bss или .data 
+
+    pop r8 ; save return adress
+check:
     mov rax, 1 ; syswrite
     mov rdi, 1 ; stdout
     mov rsi, rcx ; message
@@ -101,32 +107,18 @@ _getVector:
     syscall
 
     ; loop to input each element
-    ;loopIn:
-    ;mov rax, 0 ;sysread
-    ;mov rdi, 0 ;stdin
-    ;mov rsi, temp ; adress to write reserved bytes into 
-    ;mov rdx, 16 ; size of input
-    ;syscall
-;
-    ;mov rdx, [temp]
-    ;push rdx
-    ;dec rcx
-    ;cmp rcx, 0
-    ;jz loopIn
-    ret
-
-
-_calculate:
-
-    mov rcx, size ; move store size of array for dec
-    loopCalc:
-    pop rdx ; pop into temp
-    mov rax, 1 ;syswrite
-    mov rdi, 1 ;stdout
-    mov rsi, rdx ; write from reserved bytes
-    mov rdx, 8 ; size of input
+    loopIn:
+    mov rax, 0 ;sysread
+    mov rdi, 0 ;stdin
+    mov rsi, r9 ; write to register 
+    mov rdx, 64 ; size of input
     syscall
+
+    push r11
     dec rcx
     cmp rcx, 0
-    jz loopCalc
+    jnz loopIn
+
+    push r8 ; push return adress back
+
     ret
