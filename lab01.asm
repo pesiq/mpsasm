@@ -8,7 +8,9 @@ SECTION .bss
     min: resq 1
     max: resq 1
 
+    adr: resb 8
     digitsIndex: resb 8
+    tmpPtr: resb 8
 
 SECTION .data
     SizePrompt: db "Enter size of array: "
@@ -53,14 +55,14 @@ SECTION .text
     _start:
     ; input vector size
     ; size is strored in size (bruh)
-    ;call _getSize 
+    call _getSize 
 
     ; should print out size and prompt to input the array
-    ;call _printSize
+    call _printSize
     
     ; input vector
     ; puts user input in stack?
-    ;call _getVector
+    call _getVector
 
     ; comlete task
     ; temporarily - outputs array (in reverse?)
@@ -70,8 +72,6 @@ SECTION .text
     ; output result
     ;call _printRes 
 
-    mov rax, 35452
-    call _printInt
 
     ; terminate program
     mov eax, 1 ; exit syscall
@@ -80,14 +80,14 @@ SECTION .text
 
 _getSize:
     writeline SizePrompt, SizePromptLen
-    read size, 3
+    read size, 10
     ret
 
 _printSize:
 
     writeline SizePrompt2, SizePrompt2Len
 
-    writeline size, 1
+    writeline size, 2
 
     writeline ElementPrompt, ElementPromptLen
 
@@ -102,31 +102,30 @@ _printRes:
 
 _getVector:
 
-    pop r9 ; save return adress definatly can juggle it in the stack aswell
+    pop rax ; save return adress
+    mov [adr], rax
 
-    mov rcx, [size] ; store size of array for dec
-    sub rcx, 0xa30 ; remove newline and ascii offset
+    mov rbx, size ; store size of array for dec
+    call _charsToInt
+    mov rcx, rax ; write size of array to rcx
     
- 
-
     ; loop to input each element
-    loopIn:
+loopIn:
 
-    push rcx ; save index to stack
+    push rcx ; save index to stack from being eatem by read
 
-    read temp, 32 ;read byte from stdin
+    read temp, 10 ;read bytes from stdin
+    mov rbx, temp ; save temp adress to tbx (input for _charsToInt)
+    call _charsToInt ; convert chars to integer
+    pop rcx ; get size from top of stack
+    push rax ; put vector item onto stack
 
-    pop rcx
+    dec rcx ; decrease size
+    cmp rcx, 0 
+    jg loopIn
 
-    mov rax, [temp]
-    sub rax, 0xa30
-    push rax
-
-    dec rcx
-    cmp rcx, 0
-    jnz loopIn
-
-    push r9 ; push return adress back
+    mov rax, [adr]
+    push rax ; push return adress back to stack
 
     ret
 
