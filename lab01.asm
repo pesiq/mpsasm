@@ -1,7 +1,7 @@
 
 SECTION .bss
-    size: resb 1
-    temp: resq 1
+    size: resd 1
+    temp: resd 1
     min: resq 1
     max: resq 1
 
@@ -38,6 +38,10 @@ SECTION .text
     syscall
 %endmacro
 
+%macro charToInt 1
+
+%endmacro
+
 
     global _start ; entry point??
 
@@ -51,7 +55,7 @@ SECTION .text
     
     ; input vector
     ; puts user input in stack?
-    ;call _getVector
+    call _getVector
 
     ; comlete task
     ; temporarily - outputs array (in reverse?)
@@ -83,42 +87,38 @@ _printSize:
     ret
 
 _printRes:
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, size ; message
-    mov rdx, 64 ; message len
-    syscall
+
+    writeline size, 8
     ret
 
 
 
 _getVector:
-    mov rcx, size ; move store size of array for dec
 
-    ;использую 64 битные регистры, чтобы сохранить адрес.
-    ;если машина <64 бит, то наверное можно использовать секции .bss или .data 
+    pop r9 ; save return adress
 
-    pop r8 ; save return adress
-check:
-    mov rax, 1 ; syswrite
-    mov rdi, 1 ; stdout
-    mov rsi, rcx ; message
-    mov rdx, 64 ; message len
-    syscall
+    mov rcx, [size] ; store size of array for dec
+    sub rcx, 0xa30 ; remove newline and ascii offset
+    
+ 
 
     ; loop to input each element
     loopIn:
-    mov rax, 0 ;sysread
-    mov rdi, 0 ;stdin
-    mov rsi, r9 ; write to register 
-    mov rdx, 64 ; size of input
-    syscall
 
-    push r11
+    push rcx ; save index to stack
+
+    read temp, 32 ;read byte from stdin
+
+    pop rcx
+
+    mov rax, [temp]
+    sub rax, 0xa30
+    push rax
+
     dec rcx
     cmp rcx, 0
     jnz loopIn
 
-    push r8 ; push return adress back
+    push r9 ; push return adress back
 
     ret
