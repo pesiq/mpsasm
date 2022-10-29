@@ -1,11 +1,13 @@
 
 SECTION .bss
-    size: resd 1
-    temp: resd 1
+
+    digits: resb 10
+    size: resb 10
+    temp: resb 10
+
     min: resq 1
     max: resq 1
 
-    digits: resb 100
     digitsIndex: resb 8
 
 SECTION .data
@@ -68,7 +70,7 @@ SECTION .text
     ; output result
     ;call _printRes 
 
-    mov rax, 31242
+    mov rax, 35452
     call _printInt
 
     ; terminate program
@@ -78,14 +80,14 @@ SECTION .text
 
 _getSize:
     writeline SizePrompt, SizePromptLen
-    read size, 8
+    read size, 3
     ret
 
 _printSize:
 
     writeline SizePrompt2, SizePrompt2Len
 
-    writeline size, 8
+    writeline size, 1
 
     writeline ElementPrompt, ElementPromptLen
 
@@ -93,7 +95,7 @@ _printSize:
 
 _printRes:
 
-    writeline size, 8
+    writeline size, 1
     ret
 
 
@@ -128,8 +130,70 @@ _getVector:
 
     ret
 
-    ; uses RAX RBX RCX RDX
-; should print contents of RAX, nullifies rax
+
+; should take number chars from PTR [RBX] convert them to numeric int
+; uses RAX RBX RCX RDX
+; then put them in RAX
+; 0x0A (newline) used as terminating symbol
+_charsToInt:
+
+    mov rcx, digits ; save adress to number integer buffer (destination)
+    mov [tmpPtr], rbx ; save adress to char integer buffer (source)
+
+_stringBreakdownLoop:
+    
+    mov al, BYTE [rbx] ; move to rax val of first char digit
+    cmp al, 0x0A
+    je skip
+    sub eax, 0x30 ; char -> integer
+    mov [rcx], rax ; add int to 
+
+    ; upd source index
+    inc rbx
+    mov [tmpPtr], rbx
+
+    ; upd dest index
+    inc rcx
+    mov [digitsIndex], rcx
+
+
+    jmp _stringBreakdownLoop
+
+skip:
+
+    dec rcx
+    mov [digitsIndex], rcx
+    mov rbx, 1 ; rax stores offset
+    xor rax, rax
+    push rax ; save current int
+_intAssembly:
+
+    mov rcx, [digitsIndex] ; get pos in buffer
+    xor rax, rax ; zero out rax in case offset >100
+    mov al, BYTE [rcx] ; read current digit value to rax
+    mul rbx ; multiply value by offset
+    mov rdx, rax
+    pop rax ; get current int
+    add rax, rdx ; add value w/ correecet offset to rax 
+    push rax ;save new int again
+    
+    ; increase offset
+    mov rax, rbx
+    mov rdx, 10
+    mul rdx 
+    mov rbx, rax
+
+    ; move ptr
+    dec rcx
+    mov [digitsIndex], rcx
+    cmp rcx, digits
+    jge _intAssembly ; jump if not at begining of buffer 
+
+    pop rax
+    ret
+
+; uses RAX RBX RCX RDX
+; should print contents of RAX, obliterates RAX to 0
 _printInt:
 
     mov rcx, digits ; save adress to digit buffer
@@ -149,7 +213,7 @@ _intBreakdownLoop:
     mov rbx, 10 
     div rbx ; divide rax by 10
 
-    push rax ; store value of rax in case rax is used
+    push rax ; store value of rax in case is overriden
     add rdx, 0x30 ; align with ascii code
 
     mov rcx, [digitsIndex] ; update pos is changed
