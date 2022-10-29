@@ -4,9 +4,8 @@ SECTION .bss
     digits: resb 10
     size: resb 10
     temp: resb 10
-
-    min: resq 1
-    max: resq 1
+    min: resb 10
+    max: resb 10
 
     adr: resb 8
     digitsIndex: resb 8
@@ -65,12 +64,13 @@ SECTION .text
     call _getVector
 
     ; comlete task
-    ; temporarily - outputs array (in reverse?)
-    ;should comlete task
-    ;call _calculate  
+    ; temporarily - outputs array (in reverse?) NO LONGER AND NEVER
+    ;should calculate min and max, write theit sum to RAX
+    call _calculate  
 
     ; output result
-    ;call _printRes 
+    ; result should be in RAX
+    call _printInt
 
 
     ; terminate program
@@ -90,8 +90,45 @@ _printSize:
     writeline ElementPrompt, ElementPromptLen
     ret
 
+; calculates min and max of vector values
+; writes them to .bss
+; affects RAX, RBX, RCX, RDX 
 _calculate:
 
+    mov rdx, 1000000000
+    mov [min], rdx
+    mov rcx, [size]
+
+calcLoop:
+
+    cmp rcx, 0
+    jle calculateSum
+    pop rax
+    mov rbx, [max]
+    cmp rax, max
+    jg greater
+    mov rbx, [min]
+    cmp rax, rbx
+    jl lower
+    dec rcx
+greater:
+    mov [max], rax
+    dec rcx
+jmp calcLoop
+
+lower:
+    mov [min], rax
+    dec rcx
+jmp calcLoop
+
+calculateSum:
+    xor rax, rax
+    mov rbx, [min]
+    mov rax, rbx
+    mov rbx, [max]
+    add rax, rbx
+
+ret
 
 _getVector:
 
@@ -101,6 +138,7 @@ _getVector:
     mov rbx, size ; store size of array for dec
     call _charsToInt
     mov rcx, rax ; write size of array to rcx
+    mov [size], rax
     
     ; loop to input each element
 loopIn:
@@ -108,7 +146,7 @@ loopIn:
     push rcx ; save index to stack from being eatem by read
 
     read temp, 10 ;read bytes from stdin
-    mov rbx, temp ; save temp adress to tbx (input for _charsToInt)
+    mov rbx, temp ; save temp adress to rbx (input for _charsToInt)
     call _charsToInt ; convert chars to integer
     pop rcx ; get size from top of stack
     push rax ; put vector item onto stack
