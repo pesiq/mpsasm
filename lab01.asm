@@ -4,6 +4,7 @@ SECTION .bss
     digits: resb 20
     temp: resb 20
     size: resb 20
+
     adr: resb 8
     digitsIndex: resb 8
     tmpPtr: resb 8
@@ -20,8 +21,6 @@ SECTION .data
 
     ResultPrompt: db "The sum of biggest and smallest of the elements is: "
     ResultPromptLen: equ $-ResultPrompt
-
-
 
 SECTION .text
 
@@ -41,70 +40,70 @@ SECTION .text
     syscall
 %endmacro
 
-%macro charToInt 1
+    global _start ; entry point
 
-%endmacro
-
-
-    global _start ; entry point??
-
-    _start:
+_start:
     ; input vector size
     ; size is strored in size (bruh)
-    call _getSize 
+    call _getSize
 
     ; should print out size and prompt to input the array
     call _printSize
-    
+
     ; input vector
-    ; puts user input in stack?
+    ; puts user input in stack
     call _getVector
 
     ; comlete task
-    ;should calculate min and max, write their sum to RAX
+    ; should calculate min and max, write their sum to RAX
     call _calculate  
 
     ; output result
     ; result should be in RAX
+    push rax
+    writeline ResultPrompt, ResultPromptLen
+    pop rax
     call _printInt
-
 
     ; terminate program
     mov eax, 1 ; exit syscall
     mov ebx, 0 ; error code
     int 80h    ; call kernel
 
+;=================================================
+; methods
+
 _getSize:
     writeline SizePrompt, SizePromptLen
     read size, 10
-    ret
+ret
+
+
 
 _printSize:
-
     writeline SizePrompt2, SizePrompt2Len
     writeline size, 10
     writeline ElementPrompt, ElementPromptLen
-    ret
+ret
+
+
 
 ; calculates min and max of vector values
-; writes them to .bss
+; writes them to RAX
 ; affects RAX, RBX, RCX, RDX 
 _calculate:
 
     pop rax ; save return adress
     mov [adr], rax
-
     ; rax contains current intem of vec
     ; rbx contains max
     ; rcx size
     ; rdx min
-
     mov rdx, 1000000000 ; init min
     mov rbx, 0 ; init max
     pop rcx
 
 calcLoop:
-
     cmp rcx, 0 ; check if vector end
     jle calculateSum
     dec rcx ; dicrement size
@@ -117,20 +116,23 @@ notMax:
     jg notMin
     mov rdx, rax
 notMin:
-
     jmp calcLoop
 
 calculateSum:
     xor rax, rax ; clear rax
-
     mov rax, rbx
     add rax, rdx
+
 
     mov rbx, [adr]
     push rbx ; push return adress back to stack
 
 ret
 
+
+; inputs vector fron stdin
+; converts string to int and puts int to stack
+; converted to integer length of vector will be put on top of stack
 _getVector:
 
     pop rax ; save return adress
@@ -149,6 +151,7 @@ loopIn:
     read temp, 10 ;read bytes from stdin
     mov rbx, temp ; save temp adress to rbx (input for _charsToInt)
     call _charsToInt ; convert chars to integer
+
     pop rcx ; get size from top of stack
     push rax ; put vector item onto stack
 
@@ -162,7 +165,7 @@ endIn:
     mov rax, [adr]
     push rax ; push return adress back to stack
 
-    ret
+ret
 
 
 ; should take number chars from PTR [RBX] convert them to numeric int
@@ -170,12 +173,10 @@ endIn:
 ; then put them in RAX
 ; 0x0A (newline) used as terminating symbol
 _charsToInt:
-
     mov rcx, digits ; save adress to number integer buffer (destination)
     mov [tmpPtr], rbx ; save adress to char integer buffer (source)
 
 _stringBreakdownLoop:
-    
     mov al, BYTE [rbx] ; move to rax val of first char digit
     cmp al, 0x0A
     je skip
@@ -189,19 +190,17 @@ _stringBreakdownLoop:
     ; upd dest index
     inc rcx
     mov [digitsIndex], rcx
-
-
     jmp _stringBreakdownLoop
 
 skip:
-
     dec rcx
     mov [digitsIndex], rcx
     mov rbx, 1 ; rax stores offset
     xor rax, rax
     push rax ; save current int
-_intAssembly:
 
+    ; computes final integer using digits
+_intAssembly:
     mov rcx, [digitsIndex] ; get pos in buffer
     xor rax, rax ; zero out rax in case offset >100
     mov al, BYTE [rcx] ; read current digit value to rax
@@ -224,24 +223,23 @@ _intAssembly:
     jge _intAssembly ; jump if not at begining of buffer 
 
     pop rax
-    ret
+ret
 
 ; uses RAX RBX RCX RDX
 ; should print contents of RAX, obliterates RAX to 0
 _printInt:
-
-    mov rcx, digits ; save adress to digit buffer
-    
     ; break down number by dividing by 10, and saving remainder
     ; write them to [digits] (going to be written in reverse order)
     ; write contents of [digits] in reverse order
     ; whould output the number in ascii in correct order with newline an the end
     ; no need for stack
+    mov rcx, digits ; save adress to digit buffer
     mov rbx, 10
     mov [rcx], rbx ; add newline to buffer
     inc rcx ; increment pointer to buffer
     mov [digitsIndex], rcx ; save pointer to current pos in buffer
 
+    ; breaks down integer into digits, converts to char and puts them into [digits]
 _intBreakdownLoop:
     mov rdx, 0 ; rdx saves remainder after division
     mov rbx, 10 
@@ -259,6 +257,7 @@ _intBreakdownLoop:
     cmp rax, 0 ; if rax != 0 => continue
     jne _intBreakdownLoop
 
+    ; prints chars stored in [digits]
 _intPrintLoop:
 
     mov rcx, [digitsIndex] ; get current pos
@@ -272,4 +271,4 @@ _intPrintLoop:
     cmp rcx, digits ; check if current pos >= starting pos
     jge _intPrintLoop
 
-    ret
+ret
