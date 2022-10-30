@@ -1,12 +1,9 @@
 
 SECTION .bss
 
-    digits: resb 10
-    size: resb 10
-    temp: resb 10
-    min: resb 10
-    max: resb 10
-
+    digits: resb 20
+    temp: resb 20
+    size: resb 20
     adr: resb 8
     digitsIndex: resb 8
     tmpPtr: resb 8
@@ -64,8 +61,7 @@ SECTION .text
     call _getVector
 
     ; comlete task
-    ; temporarily - outputs array (in reverse?) NO LONGER AND NEVER
-    ;should calculate min and max, write theit sum to RAX
+    ;should calculate min and max, write their sum to RAX
     call _calculate  
 
     ; output result
@@ -86,7 +82,7 @@ _getSize:
 _printSize:
 
     writeline SizePrompt2, SizePrompt2Len
-    writeline size, 2
+    writeline size, 10
     writeline ElementPrompt, ElementPromptLen
     ret
 
@@ -95,38 +91,43 @@ _printSize:
 ; affects RAX, RBX, RCX, RDX 
 _calculate:
 
-    mov rdx, 1000000000
-    mov [min], rdx
-    mov rcx, [size]
+    pop rax ; save return adress
+    mov [adr], rax
+
+    ; rax contains current intem of vec
+    ; rbx contains max
+    ; rcx size
+    ; rdx min
+
+    mov rdx, 1000000000 ; init min
+    mov rbx, 0 ; init max
+    pop rcx
 
 calcLoop:
 
-    cmp rcx, 0
+    cmp rcx, 0 ; check if vector end
     jle calculateSum
-    pop rax
-    mov rbx, [max]
-    cmp rax, max
-    jg greater
-    mov rbx, [min]
-    cmp rax, rbx
-    jl lower
-    dec rcx
-greater:
-    mov [max], rax
-    dec rcx
-jmp calcLoop
+    dec rcx ; dicrement size
+    pop rax ; get new item
+    cmp rax, rbx ; compare item to max
+    jl notMax
+    mov rbx, rax
+notMax:
+    cmp rax, rdx ; compare item to min
+    jg notMin
+    mov rdx, rax
+notMin:
 
-lower:
-    mov [min], rax
-    dec rcx
-jmp calcLoop
+    jmp calcLoop
 
 calculateSum:
-    xor rax, rax
-    mov rbx, [min]
+    xor rax, rax ; clear rax
+
     mov rax, rbx
-    mov rbx, [max]
-    add rax, rbx
+    add rax, rdx
+
+    mov rbx, [adr]
+    push rbx ; push return adress back to stack
 
 ret
 
@@ -155,6 +156,9 @@ loopIn:
     cmp rcx, 0 
     jg loopIn
 
+endIn:
+    mov rcx, [size] 
+    push rcx    ; save size on stack; on top of the vector
     mov rax, [adr]
     push rax ; push return adress back to stack
 
