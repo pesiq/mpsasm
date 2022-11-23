@@ -1,4 +1,3 @@
-
 SECTION .bss
 
     digits: resb 20
