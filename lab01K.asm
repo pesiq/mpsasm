@@ -47,21 +47,16 @@ global _start
 %endmacro
 
 _start:
-    ;read size, 4
-;
-    ;mov al, [size]
-    ;sub al, 0x30
-    ;add eax, 1
-    ;add eax, 0x30
-    ;mov [size], eax
-;
-;
-    ;print size, 1
 
     call _matrixInput
 
     print line3, line3size
     mov rax, matData
+    call _printMatrix
+
+    print line4, line4size
+    call _transpose
+    mov rax, TmatData
     call _printMatrix
 
     ;завершение программы
@@ -174,5 +169,56 @@ loopCol:
     print printString, 90
 
 ret ; выход из _print matrix
+
+; берет данные из matData
+; записывает транспонированную матрицу в TmatData
+_transpose:
+
+    mov [matPtr], DWORD matData ; запомнить текущее положение в данных матрицы
+    mov [adr], DWORD TmatData ; текущее положение в транспонированной матрице
+    mov ebx, [size] ; размер матрицы 
+
+    ; проход по ebx для строк 
+    ; проходимся по ecx для колонок в строке
+
+    ; т.к. данные матрицы записаны в строку
+    ; можно по ней пройти n раз начиная с 1 элемента с шагом в n
+    ; записывая эти элементы в новую матрицу, получится транспонированая матрица
+
+TloopRow:
+    push rbx
+    mov ecx, [size] ; размер матрицы
+    mov rbx, [matPtr]
+    push rbx
+
+TloopCol:
+
+    mov eax, [matPtr] ; original
+    mov ebx, [adr] ; transposed
+    mov edx, [eax]
+    mov [ebx], edx
+
+    inc ebx
+    mov [adr], ebx
+
+    mov ebx, [size]
+    add eax, ebx 
+    mov [matPtr], eax
+
+    dec ecx
+    cmp ecx, 0
+    jg TloopCol ; col loop
+
+
+    pop rbx
+    inc ebx
+    mov [matPtr], ebx
+
+    pop rbx
+    dec ebx
+    cmp ebx, 0
+    jg TloopRow ; row loop
+
+ret ; выход из _transpose
 
 
