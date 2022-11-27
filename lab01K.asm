@@ -2,12 +2,15 @@
 
 section .bss
 
-    matData: resb 90
 
-    size: resd 1
-    tmp: resd 1
 
-    TmatData: resb 90
+    size: resd 1 ; размер матрицы
+    tmp: resd 1 ; для временного хранения данных
+    ptr: resq 1 ; временно сохраняется адрес
+
+    TmatData: resb 90 ; числовые данные транспонированной матрицы 
+    matData: resb 90 ; числовые данные исходной матрицы
+    matPtr: resb 8 ; указатель в данных матрицы
 
 section .data
     line1: db "Enter size of matrix: "
@@ -67,24 +70,38 @@ _matrixInput:
     mov eax, [size]
     sub eax, 0xa30 ; ascii символ в число
     mov [size], eax ;размер матрицы сохраняется в size и eax
-    mov ebx, eax
+
+    mov ebx, eax ; n^2 - кол-во элементов матрицы
     mul ebx
 
-    push eax ; размер сохраняется на стаке
-
-
+    push eax ; кол-во элементов сохраняется на стаке
 
     print line2, line2size
 
+    mov eax, matData
+    push eax
+
+matLoop:
+    read tmp, 4 ; читает 4 байта 
+    mov eax, [tmp] ; 
+    sub eax, 0xa30 ;
 
 
+    pop ebx ; вытаскиваем текущий указатель в массиве из стека
+    mov ebx, eax
+    inc ebx ; инкрементируем указатель
 
+    pop ecx
+    dec ecx
+
+    push ecx
+    push ebx
+
+    cmp ecx, 0
+    je matLoop
 
     ; ввод самой матрицы 
     ; числа вводятся по одному на одной строке
-
-    read tmp, 4
-
 
 ret ; выход из _matrixInput
 
