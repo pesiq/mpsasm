@@ -16,7 +16,7 @@ section .data
     line1: db "Enter size of matrix: "
     line1size: equ $-line1
 
-    line2: db "Enter matrix elements"
+    line2: db "Enter matrix elements:", 10
     line2size: equ $-line2
 
 
@@ -74,39 +74,47 @@ _matrixInput:
     mov ebx, eax ; n^2 - кол-во элементов матрицы
     mul ebx
 
-    push eax ; кол-во элементов сохраняется на стаке
+    push rax ; кол-во элементов сохраняется на стаке
 
     print line2, line2size
 
-    mov eax, matData
-    push eax
+    mov ebx, matData
+    pop rcx
 
 matLoop:
+
+    push rcx ; кол-во элементов
+    push rbx ; адрес к элементу
+
     read tmp, 4 ; читает 4 байта 
     mov eax, [tmp] ; 
     sub eax, 0xa30 ;
 
 
-    pop ebx ; вытаскиваем текущий указатель в массиве из стека
-    mov ebx, eax
-    inc ebx ; инкрементируем указатель
+    pop rbx ; вытаскиваем текущий указатель в массиве из стека
+    mov [rbx], eax
+    inc rbx ; инкрементируем указатель
 
-    pop ecx
-    dec ecx
+    pop rcx ; вытаскиваем кол-во элементов
+    dec rcx
 
-    push ecx
-    push ebx
+
 
     cmp ecx, 0
-    je matLoop
+    jne matLoop
 
     ; ввод самой матрицы 
     ; числа вводятся по одному на одной строке
+debug:
 
 ret ; выход из _matrixInput
 
 
 
-    
+_printMatrix:
+
+
+
+ret ; выход из _print matrix
 
 
