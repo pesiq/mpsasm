@@ -1,5 +1,6 @@
 SECTION .bss
 
+
     digits: resb 20
     temp: resb 20
     size: resb 20
