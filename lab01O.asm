@@ -15,7 +15,6 @@ SECTION .bss
     number: resq 1
     size: resq 1
     resSize: resq 1
-    nSize: resq 1
 
 SECTION .data
 
@@ -37,7 +36,7 @@ _start:
     call _vectorIn
 
 
-    ;call _solve
+    call _solve
 
 
     ;call _vectorOut
@@ -84,14 +83,25 @@ _sizein:
 
 ret
 
+_solve:
+    
+    mov edx, vectorData
+    mov [pointer], edx
+
+    mov ecx, resultVectorData
+    mov [NDataPointer], ecx 
+
+ret
+
 ; в ebx передается адрес на строку
 ; полученное число сохраняется в eax
 _stringToNumber:
+
     mov [pointer], ebx
     mov ecx, numberData
 
 stringLoop:
-    mov al, BYTE [eax]
+    mov al, BYTE [ebx]
     cmp al, 10 ; \n 
     je done
 
@@ -106,7 +116,7 @@ stringLoop:
     jmp stringLoop
 
 done:
-    dex ecx
+    dec ecx
     mov [NDataPointer], ecx
     mov ebx, 1 ; запоминаем 10 в степени n
     mov eax, 0
@@ -129,7 +139,7 @@ makeNumber:
     mul ebx
     mov ebx, eax
 
-    dex ecx
+    dec ecx
     mov [NDataPointer], ecx
     cmp rcx, numberData
     jge makeNumber
@@ -141,20 +151,19 @@ ret
 ; берет число, посимвольно записывает его в стек, так чтобы старший символ был сверху
 ; число берет из rax
 ; кол-во чисел в rcx
-_numberToString:
+_numberToChars:
     xor rcx, rcx
 lastDigit:
     mov ebx, 10
     xor rdx, rdx ; в rdx сохраняется остаток от деления
     div ebx
     add edx, 0x30
-    push edx
+    push rdx
 
     inc ecx
 
     cmp eax, 0
     jne lastDigit
-
 ret
 
 _vectorIn:
@@ -170,9 +179,9 @@ _vectorIn:
     push rbx
 
     ; считывает цифру из stdin
-    read number 4
+    read number, 8
 
-    mov ebx, [number]
+    mov ebx, number
     call _stringToNumber
 
     pop rbx
@@ -184,20 +193,49 @@ _vectorIn:
     dec eax
     cmp eax, 0
     jg loopIn
-
+test:
+xor eax, eax
 ret
 
 _vectorOut:
  
-    mov eax, [size] ; размер вектора
-    mov ebx, vectorData ; в ebx записывается адрес первого элемента вектора
+    mov rbx, vectorData ; в ebx записывается адрес первого элемента вектора
+    mov [pointer], rbx
+
+    mov ebx, outputString
+    mov [NDataPointer], ebx ; адрес символа в строке для вывода
 
 loopOut:
+
+    dec eax
+    mov [size], eax
     
-    
+    mov eax, [pointer]
+    call _numberToChars
+
+fillString:
+
+    pop rbx
+
+    mov [NDataPointer], rbx
+
+    dec ecx
+
+    cmp ecx, 0
+    jle fillString
+    mov edx, 0x20
+    mov [NDataPointer], edx ; добавить пробел между числами
+    mov ebx, NDataPointer
+    inc ebx
+    mov [NDataPointer], ebx
+
+    mov [size], eax
 
     cmp eax, 0
     jg loopOut
+
+    mov edx, 0xA
+    mov [NDataPointer], edx
 
     write outputString, 100
 
