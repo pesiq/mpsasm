@@ -57,7 +57,7 @@ _start:
     syscall
 %endmacro
 
-%macro out 2
+%macro write 2
     mov rax, 1
     mov rdi, 1
     mov rsi, %1
@@ -169,5 +169,25 @@ _vectorIn:
     dec eax
     cmp eax, 0
     jg loopIn
+
+ret
+
+_vectorOut:
+ 
+    mov eax, [size] ; размер вектора
+    mov ebx, vectorData ; в ebx записывается адрес на первый элемент вектора
+
+loopOut:
+    
+    write number, 1
+
+    cmp eax, 0
+    jg loopOut
+
+    mov eax, 1
+    mov edi, 1
+    mov esi, 0x30
+    mov edx, 1
+    syscall
 
 ret
