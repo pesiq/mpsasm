@@ -122,7 +122,7 @@ makeNumber:
     add eax, edx
     push rax
 
-    ; увеличить степень 10
+    ; увеличить степень 10-ки
     mov eax, ebx
     mov ebx, 10
     mul ebx
@@ -137,9 +137,10 @@ makeNumber:
 
 ret
 
-
+; берет число, посимвольно записывает его в стек
+; кол-во чисел в rcx
 _numberToString:
-
+    
 ret
 
 _vectorIn:
@@ -175,11 +176,11 @@ ret
 _vectorOut:
  
     mov eax, [size] ; размер вектора
-    mov ebx, vectorData ; в ebx записывается адрес на первый элемент вектора
+    mov ebx, vectorData ; в ebx записывается адрес первого элемента вектора
 
 loopOut:
     
-    write number, 1
+    
 
     cmp eax, 0
     jg loopOut
