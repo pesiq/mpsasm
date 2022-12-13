@@ -36,7 +36,9 @@ _start:
     call _vectorIn
 
 
-    call _solve
+    call _evenNumbers
+
+    call _sort
 
 
     ;call _vectorOut
@@ -83,13 +85,52 @@ _sizein:
 
 ret
 
-_solve:
+_evenNumbers:
     
     mov edx, vectorData
     mov [pointer], edx
 
     mov ecx, resultVectorData
     mov [NDataPointer], ecx 
+
+isEvenLoop:
+
+    mov eax, [pointer] ; текущий элемент вектора
+    mov ebx, 2 
+    div ebx ; остаток от деления на 2
+
+    cmp edx, 0
+    jne odd
+
+
+    mov eax, [pointer]
+    mov [NDataPointer], eax
+
+
+    mov eax, NDataPointer
+    inc eax
+    mov [NDataPointer], eax
+
+    mov eax, [resSize]
+    inc eax
+    mov [resSize], eax
+
+odd:
+
+    mov eax, [size]
+    dec eax
+    mov [size], eax
+
+    mov eax, pointer
+    inc eax
+    mov [pointer], eax
+
+    cmp eax, 0
+    jg evenLoop
+
+ret
+
+_sort:
 
 ret
 
@@ -152,7 +193,6 @@ ret
 ; число берет из rax
 ; кол-во чисел в rcx
 _numberToChars:
-    xor rcx, rcx
 lastDigit:
     mov ebx, 10
     xor rdx, rdx ; в rdx сохраняется остаток от деления
@@ -193,8 +233,7 @@ _vectorIn:
     dec eax
     cmp eax, 0
     jg loopIn
-test:
-xor eax, eax
+
 ret
 
 _vectorOut:
