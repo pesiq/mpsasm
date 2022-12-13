@@ -40,6 +40,26 @@ _start:
     mov ebx, 0 
     int 80h 
 
+;==============
+; Macros
+;==============
+
+%macro in 2
+    mov rax, 0
+    mov rdi, 0
+    mov rsi, %1
+    mov rdx, %2
+    syscall
+%endmacro
+
+%macro out 2
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, %1
+    mov rdx, %2
+    syscall
+%endmacro
+
 ;===============
 ; МЕТОДЫ
 ;===============
