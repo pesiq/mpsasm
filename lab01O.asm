@@ -15,6 +15,7 @@ SECTION .bss
     number: resq 1
     size: resq 1
     resSize: resq 1
+    nSize: resq 1
 
 SECTION .data
 
@@ -137,10 +138,23 @@ makeNumber:
 
 ret
 
-; берет число, посимвольно записывает его в стек
+; берет число, посимвольно записывает его в стек, так чтобы старший символ был сверху
+; число берет из rax
 ; кол-во чисел в rcx
 _numberToString:
-    
+    xor rcx, rcx
+lastDigit:
+    mov ebx, 10
+    xor rdx, rdx ; в rdx сохраняется остаток от деления
+    div ebx
+    add edx, 0x30
+    push edx
+
+    inc ecx
+
+    cmp eax, 0
+    jne lastDigit
+
 ret
 
 _vectorIn:
