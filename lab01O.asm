@@ -2,10 +2,15 @@ global _start
 
 SECTION .bss
 
-    vectorData: resb 100
-    resultVectorData: resb 100
+    vectorData: resb 80
+    resultVectorData: resb 80
+
+    numberData: resb 100
+    outputString: resb 100
 
     pointer: resq 1
+
+    NDataPointer: resq 1
     
     number: resq 1
     size: resq 1
@@ -44,7 +49,7 @@ _start:
 ; Macros
 ;==============
 
-%macro in 2
+%macro read 2
     mov rax, 0
     mov rdi, 0
     mov rsi, %1
@@ -78,6 +83,65 @@ _sizein:
 
 ret
 
+; в ebx передается адрес на строку
+; полученное число сохраняется в eax
+_stringToNumber:
+    mov [pointer], ebx
+    mov ecx, numberData
+
+stringLoop:
+    mov al, BYTE [eax]
+    cmp al, 10 ; \n 
+    je done
+
+    sub eax, 0x30
+    mov [ecx], eax
+
+    inc ebx
+    mov [pointer], ebx
+
+    inc ecx
+    mov [NDataPointer], ecx
+    jmp stringLoop
+
+done:
+    dex ecx
+    mov [NDataPointer], ecx
+    mov ebx, 1 ; запоминаем 10 в степени n
+    mov eax, 0
+    push rax
+
+makeNumber:
+
+    mov ecx, [NDataPointer]
+    mov eax, 0
+    mov al, BYTE [ecx]
+    mul ebx ; умножаем eax на 10 в степени 
+    mov edx, eax
+    pop rax
+    add eax, edx
+    push rax
+
+    ; увеличить степень 10
+    mov eax, ebx
+    mov ebx, 10
+    mul ebx
+    mov ebx, eax
+
+    dex ecx
+    mov [NDataPointer], ecx
+    cmp rcx, numberData
+    jge makeNumber
+
+    pop rax
+
+ret
+
+
+_numberToString:
+
+ret
+
 _vectorIn:
 
     mov eax, [size]
@@ -90,11 +154,8 @@ _vectorIn:
     push rax
     push rbx
 
-    mov eax, 0
-    mov edi, 0
-    mov esi, number
-    mov edx, 8
-    syscall
+    ; считывает цифру из stdin
+    read number 4
 
     mov eax, [number]
     sub eax, 0xA30
