@@ -157,8 +157,8 @@ _vectorIn:
     ; считывает цифру из stdin
     read number 4
 
-    mov eax, [number]
-    sub eax, 0xA30
+    mov ebx, [number]
+    call _stringToNumber
 
     pop rbx
     mov [rbx], eax
@@ -184,10 +184,6 @@ loopOut:
     cmp eax, 0
     jg loopOut
 
-    mov eax, 1
-    mov edi, 1
-    mov esi, 0x30
-    mov edx, 1
-    syscall
+    write outputString, 100
 
 ret
