@@ -44,7 +44,7 @@ _start:
     call _sort
 
     mov rbx, resultVectorData
-    mov rcx, [size]
+    mov rcx, [resSize]
     call _vectorOut
 
     mov eax, 1 
@@ -90,7 +90,7 @@ _sizein:
 ret
 
 _evenNumbers:
-    test:
+
     mov rdx, vectorData
     mov [pointer], rdx
 
@@ -145,7 +145,7 @@ _sort:
 
     mov eax, resultVectorData
     mov [NDataPointer], eax
-
+    dec ecx
 bigLoop:
     push rcx
 
@@ -156,12 +156,12 @@ innerLoop:
 
     mov ecx, [NDataPointer]
 
-    mov eax, [ecx]
+    mov eax, [ecx] ; eax = vec[i]
     add ecx, 4
-    mov ebx, [ecx]
+    mov ebx, [ecx] ; ebx = vec[i + 1]
     
 
-    cmp ebx, eax
+    cmp eax, ebx
     jg swap
 
     jmp skip
@@ -170,10 +170,9 @@ swap:
 
     mov ecx, [NDataPointer]
 
-    mov eax, [ecx]
+    mov [ecx], ebx
     add ecx, 4
-    mov ebx, [ecx]
-    
+    mov [ecx], eax
 
 skip:
 
@@ -186,11 +185,13 @@ skip:
     cmp rcx, 0
 jne innerLoop
 
+    mov ecx, resultVectorData
+    mov [NDataPointer], ecx
+
     pop rcx
     dec rcx
     cmp rcx, 0
 jne bigLoop
-
 
 ret
 
@@ -283,7 +284,7 @@ ret
 ;rbx - адрес вектора
 ;rcx - размер вектора
 _vectorOut:
- 
+
     mov [pointer], rbx
 
     mov ebx, outputString
@@ -343,6 +344,9 @@ fillString:
     mov edx, 0xA
     mov rax, [NDataPointer]
     mov [rax], edx
+    inc rax
+    mov edx, 0x0
+    mov [eax], edx
 
     write outputString, 100
 
