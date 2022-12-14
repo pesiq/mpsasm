@@ -86,47 +86,53 @@ _sizein:
 ret
 
 _evenNumbers:
-    
-    mov edx, vectorData
-    mov [pointer], edx
+    test:
+    mov rdx, vectorData
+    mov [pointer], rdx
 
-    mov ecx, resultVectorData
-    mov [NDataPointer], ecx 
+    mov rcx, resultVectorData
+    mov [NDataPointer], rcx 
 
 isEvenLoop:
 
-    mov eax, [pointer] ; текущий элемент вектора
+    xor rdx, rdx
+    xor rax, rax
+    mov rbx, [pointer] ; текущий элемент вектора
+    mov eax, [rbx]
     mov ebx, 2 
     div ebx ; остаток от деления на 2
 
     cmp edx, 0
     jne odd
 
+    mov ebx, [pointer]
+    mov ecx, [NDataPointer]
+    mov eax, [ebx]
+    mov [ecx], eax ; записать четный элеменет в верктор результата
 
-    mov eax, [pointer]
-    mov [NDataPointer], eax
 
-
-    mov eax, NDataPointer
-    inc eax
-    mov [NDataPointer], eax
+    mov eax, [NDataPointer]
+    add eax, 4
+    mov [NDataPointer], eax ; итерация адреса в векторе результата
 
     mov eax, [resSize]
     inc eax
-    mov [resSize], eax
+    mov [resSize], eax ; увеличить размер вектора четных чисел
 
 odd:
 
-    mov eax, [size]
+
+
+    mov rax, [pointer]
+    add eax, 4
+    mov [pointer], eax ; итерация в векторе начальном
+
+    mov rax, [size]
     dec eax
     mov [size], eax
 
-    mov eax, pointer
-    inc eax
-    mov [pointer], eax
-
     cmp eax, 0
-    jg evenLoop
+    jg isEvenLoop
 
 ret
 
@@ -138,8 +144,8 @@ ret
 ; полученное число сохраняется в eax
 _stringToNumber:
 
-    mov [pointer], ebx
     mov ecx, numberData
+    mov [pointer], ebx
 
 stringLoop:
     mov al, BYTE [ebx]
@@ -210,7 +216,7 @@ _vectorIn:
 
     mov eax, [size]
 
-    mov ebx, vectorData
+    mov ebx, vectorData ;указатель на начало вектора
 
     
     loopIn:
@@ -219,14 +225,14 @@ _vectorIn:
     push rbx
 
     ; считывает цифру из stdin
-    read number, 8
+    read number, 4
 
     mov ebx, number
     call _stringToNumber
 
     pop rbx
     mov [rbx], eax
-    inc ebx
+    add ebx, 4
 
 
     pop rax
