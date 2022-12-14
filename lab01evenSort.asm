@@ -9,12 +9,11 @@ SECTION .bss
     outputString: resb 100
 
     pointer: resq 1
-
     NDataPointer: resq 1
-    
     number: resq 1
     size: resq 1
     resSize: resq 1
+    outputStrSize: resq 1
 
 SECTION .data
 
@@ -28,28 +27,6 @@ SECTION .data
     resultStringSize: equ $-resultString
 
 SECTION .text
-
-_start:
-
-    call _sizein
-
-    call _vectorIn
-
-    mov rbx, vectorData
-    mov rcx, [size]
-    call _vectorOut
-
-    call _evenNumbers
-
-    call _sort
-
-    mov rbx, resultVectorData
-    mov rcx, [resSize]
-    call _vectorOut
-
-    mov eax, 1 
-    mov ebx, 0 
-    int 80h 
 
 ;==============
 ; Macros
@@ -70,6 +47,34 @@ _start:
     mov rdx, %2
     syscall
 %endmacro
+
+_start:
+
+    write sizeString, sizeStringSize
+    call _sizein
+
+    write vectorString, vectorStringSize
+    call _vectorIn
+
+    mov rbx, vectorData
+    mov rcx, [size]
+    call _vectorOut
+
+    call _evenNumbers
+
+    call _sort
+
+
+    write resultString, resultStringSize
+    mov rbx, resultVectorData
+    mov rcx, [resSize]
+    call _vectorOut
+
+    mov eax, 1 
+    mov ebx, 0 
+    int 80h 
+
+
 
 ;===============
 ; МЕТОДЫ
@@ -290,6 +295,10 @@ _vectorOut:
     mov ebx, outputString
     mov [NDataPointer], ebx ; адрес символа в строке для вывода
 
+    mov rax, 8
+    mul rcx
+    push rax
+
 loopOut:
     ; т.к. число "разбирается" на цифры с лева на право
     ; а раписывать в строку нужно с права на лево
@@ -344,10 +353,9 @@ fillString:
     mov edx, 0xA
     mov rax, [NDataPointer]
     mov [rax], edx
-    inc rax
-    mov edx, 0x0
-    mov [eax], edx
 
-    write outputString, 100
+    test:
+    pop rbx
+    write outputString, rbx
 
 ret
