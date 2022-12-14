@@ -13,7 +13,6 @@ SECTION .bss
     number: resq 1
     size: resq 1
     resSize: resq 1
-    outputStrSize: resq 1
 
 SECTION .data
 
@@ -354,7 +353,6 @@ fillString:
     mov rax, [NDataPointer]
     mov [rax], edx
 
-    test:
     pop rbx
     write outputString, rbx
 
