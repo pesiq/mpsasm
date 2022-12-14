@@ -35,6 +35,9 @@ _start:
 
     call _vectorIn
 
+    mov rbx, vectorData
+    mov rcx, [size]
+    call _vectorOut
 
     call _evenNumbers
 
@@ -121,8 +124,6 @@ isEvenLoop:
 
 odd:
 
-
-
     mov rax, [pointer]
     add eax, 4
     mov [pointer], eax ; итерация в векторе начальном
@@ -195,22 +196,6 @@ makeNumber:
 
 ret
 
-; берет число, посимвольно записывает его в стек, так чтобы старший символ был сверху
-; число берет из rax
-; кол-во чисел в rcx
-_numberToChars:
-lastDigit:
-    mov ebx, 10
-    xor rdx, rdx ; в rdx сохраняется остаток от деления
-    div ebx
-    add edx, 0x30
-    push rdx
-
-    inc ecx
-
-    cmp eax, 0
-    jne lastDigit
-ret
 
 _vectorIn:
 
@@ -242,45 +227,69 @@ _vectorIn:
 
 ret
 
+;rbx - адрес вектора
+;rcx - размер вектора
 _vectorOut:
  
-    mov rbx, vectorData ; в ebx записывается адрес первого элемента вектора
     mov [pointer], rbx
 
     mov ebx, outputString
     mov [NDataPointer], ebx ; адрес символа в строке для вывода
 
 loopOut:
+    ; т.к. число "разбирается" на цифры с лева на право
+    ; а раписывать в строку нужно с права на лево
+    ; с помощью стека "разворачиваем" число
+    push rcx ; размер на стек
 
-    dec eax
-    mov [size], eax
-    
-    mov eax, [pointer]
-    call _numberToChars
+    mov ebx, [pointer]
+    mov eax, [rbx]
+    xor rbx, rbx
+    xor rcx, rcx
+    lastDigit:
+    mov ebx, 10
+    xor rdx, rdx ; в rdx сохраняется остаток от деления
+    div ebx
+    add edx, 0x30
+    push rdx
+
+    inc ecx
+
+    cmp eax, 0
+    jne lastDigit
 
 fillString:
 
     pop rbx
 
-    mov [NDataPointer], rbx
+    mov rax, [NDataPointer]
+    mov [rax], rbx
+    inc rax
+    mov [NDataPointer], rax
 
     dec ecx
 
     cmp ecx, 0
-    jle fillString
-    mov edx, 0x20
-    mov [NDataPointer], edx ; добавить пробел между числами
-    mov ebx, NDataPointer
-    inc ebx
-    mov [NDataPointer], ebx
+    jg fillString
 
-    mov [size], eax
+    mov ebx, 0x20
+    mov rax, [NDataPointer]
+    mov [rax], rbx
+    inc rax
+    mov [NDataPointer], rax
 
-    cmp eax, 0
-    jg loopOut
+    mov eax, [pointer]
+    add eax, 4
+    mov [pointer], eax
+
+    pop rcx
+    dec rcx
+    cmp rcx, 0
+    jne loopOut
 
     mov edx, 0xA
-    mov [NDataPointer], edx
+    mov rax, [NDataPointer]
+    mov [rax], edx
 
     write outputString, 100
 
