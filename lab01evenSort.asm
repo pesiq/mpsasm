@@ -138,7 +138,59 @@ odd:
 
 ret
 
+; bubble sort?
 _sort:
+
+    mov ecx, [resSize]
+
+    mov eax, resultVectorData
+    mov [NDataPointer], eax
+
+bigLoop:
+    push rcx
+
+    mov ecx, [resSize]
+    dec ecx
+innerLoop:
+    push rcx
+
+    mov ecx, [NDataPointer]
+
+    mov eax, [ecx]
+    add ecx, 4
+    mov ebx, [ecx]
+    
+
+    cmp ebx, eax
+    jg swap
+
+    jmp skip
+
+swap:
+
+    mov ecx, [NDataPointer]
+
+    mov eax, [ecx]
+    add ecx, 4
+    mov ebx, [ecx]
+    
+
+skip:
+
+    mov ecx, [NDataPointer]
+    add ecx, 4
+    mov [NDataPointer], ecx
+
+    pop rcx
+    dec rcx
+    cmp rcx, 0
+jne innerLoop
+
+    pop rcx
+    dec rcx
+    cmp rcx, 0
+jne bigLoop
+
 
 ret
 
