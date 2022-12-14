@@ -43,8 +43,9 @@ _start:
 
     call _sort
 
-
-    ;call _vectorOut
+    mov rbx, resultVectorData
+    mov rcx, [size]
+    call _vectorOut
 
     mov eax, 1 
     mov ebx, 0 
