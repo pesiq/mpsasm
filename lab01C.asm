@@ -16,6 +16,8 @@ SECTION .bss
     number: resq 1
     resSize: resq 1
 
+    negative: resb 1
+
 SECTION .data
 
     sizeString: db "Matrix size: "
@@ -53,7 +55,7 @@ _start:
 
     call _printMatrix
 
-    ;call _getVector
+    call _getVector
 
     ; call _sort
 
@@ -70,7 +72,7 @@ _matrixInput:
 
     ;Ввести размер матрицы
     write sizeString, sizeStringSize
-    read matSize, 2 ; ввод размера размер считывается как символ ascii + \n
+    read matSize, 8 ; ввод размера размер считывается как символ ascii + \n
     mov eax, [matSize]
     sub eax, 0xa30 ; ascii символ в число
     mov [matSize], eax ;размер матрицы сохраняется в size и eax
@@ -90,19 +92,17 @@ matLoop:
     push rcx ; кол-во элементов
     push rbx ; адрес к элементу
 
-    read number, 4 ; читает 4 байта 
+    read number, 8 ; читает 8 байт 
     mov ebx, number ; 
     call _charsToInt
 
 
     pop rbx ; вытаскиваем текущий указатель в массиве из стека
     mov [rbx], eax
-    add rbx, 4 ; инкрементируем указатель
+    add rbx, 8 ; инкрементируем указатель
 
     pop rcx ; вытаскиваем кол-во элементов
     dec rcx
-
-
 
     cmp ecx, 0
     jne matLoop
@@ -113,17 +113,31 @@ ret ; выход из _matrixInput
 
 
 _charsToInt:
+
+    mov ecx, 1
+    mov [negative], ecx
     mov ecx, chars
     mov [pointer], ebx
-
+    
 stringLoop:
     mov al, BYTE [ebx]
     cmp al, 10 ; \n 
     je done
 
+    cmp al, 0x2d
+    jne positive
+
+    push rbx
+    mov rbx, -1
+    mov [negative], rbx
+    pop rbx
+    dec ecx
+    jmp skip
+
+positive:
     sub eax, 0x30
     mov [ecx], eax
-
+skip:
     inc ebx
     mov [pointer], ebx
 
@@ -139,7 +153,6 @@ done:
     push rax
 
 makeNumber:
-
     mov ecx, [charsPtr]
     mov eax, 0
     mov al, BYTE [ecx]
@@ -161,12 +174,17 @@ makeNumber:
     jge makeNumber
 
     pop rax
+    mov rbx, [negative]
+    imul ebx
 
 ret
 
+_getVector:
+    
+ret
 
-_matrixOutput:
 
+_printMatrix:
 
 ret
 
