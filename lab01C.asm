@@ -3,11 +3,12 @@ SECTION .bss
     vectorData: resb 40
     matData: resb 100
 
-    numberData: resb 100
+    chars: resb 100
     outputString: resb 100
 
     matPtr: resq 1
-    NDataPointer: resq 1
+    charsPtr: resq 1
+    pointer: resq 1
 
     matSize: resd 1
     vecSize: resq 1
@@ -21,10 +22,12 @@ SECTION .data
     sizeStringSize: equ $-sizeString
 
     string2: db "Enter matrix elements:", 0xA
+    string2size: equ $-string2
+
+    vectorString: db "Result vector:", 0xA
     vectorStringSize: equ $-vectorString
 
-    resultString: db "Result vector:", 0xA
-    resultStringSize: equ $-resultString
+SECTION .text
 
 %macro read 2
     mov rax, 0
@@ -42,17 +45,19 @@ SECTION .data
     syscall
 %endmacro
 
+    global _start 
+
 _start:
 
     call _matrixInput
 
     call _printMatrix
 
-    call _getVector
+    ;call _getVector
 
-    call _sort
+    ; call _sort
 
-    call _printVector
+    ; call _printVector
 
     mov eax, 1 
     mov ebx, 0 
@@ -64,18 +69,18 @@ _start:
 _matrixInput:
 
     ;Ввести размер матрицы
-    print sizeString, sizeStringSize
-    read size, 2 ; ввод размера размер считывается как символ ascii + \n
-    mov eax, [size]
+    write sizeString, sizeStringSize
+    read matSize, 2 ; ввод размера размер считывается как символ ascii + \n
+    mov eax, [matSize]
     sub eax, 0xa30 ; ascii символ в число
-    mov [size], eax ;размер матрицы сохраняется в size и eax
+    mov [matSize], eax ;размер матрицы сохраняется в size и eax
 
     mov ebx, eax ; n^2 - кол-во элементов матрицы
     mul ebx
 
     push rax ; кол-во элементов сохраняется на стаке
 
-    print string2, string2size
+    write string2, string2size
 
     mov ebx, matData
     pop rcx
@@ -85,14 +90,14 @@ matLoop:
     push rcx ; кол-во элементов
     push rbx ; адрес к элементу
 
-    read tmp, 4 ; читает 4 байта 
-    mov eax, [tmp] ; 
-    sub eax, 0xa30 ;
+    read number, 4 ; читает 4 байта 
+    mov ebx, number ; 
+    call _charsToInt
 
 
     pop rbx ; вытаскиваем текущий указатель в массиве из стека
     mov [rbx], eax
-    inc rbx ; инкрементируем указатель
+    add rbx, 4 ; инкрементируем указатель
 
     pop rcx ; вытаскиваем кол-во элементов
     dec rcx
@@ -108,54 +113,64 @@ ret ; выход из _matrixInput
 
 
 _charsToInt:
-    mov rcx, digits ; save adress to number integer buffer (destination)
-    mov [tmpPtr], rbx ; save adress to char integer buffer (source)
+    mov ecx, chars
+    mov [pointer], ebx
 
-_stringBreakdownLoop:
-    mov al, BYTE [rbx] ; move to rax val of first char digit
-    cmp al, 0x0A
-    je skip
-    sub eax, 0x30 ; char -> integer
-    mov [rcx], rax ; add int to 
+stringLoop:
+    mov al, BYTE [ebx]
+    cmp al, 10 ; \n 
+    je done
 
-    ; upd source index
-    inc rbx
-    mov [tmpPtr], rbx
+    sub eax, 0x30
+    mov [ecx], eax
 
-    ; upd dest index
-    inc rcx
-    mov [digitsIndex], rcx
-    jmp _stringBreakdownLoop
+    inc ebx
+    mov [pointer], ebx
 
-skip:
-    dec rcx
-    mov [digitsIndex], rcx
-    mov rbx, 1 ; rax stores offset
-    xor rax, rax
-    push rax ; save current int
+    inc ecx
+    mov [charsPtr], ecx
+    jmp stringLoop
 
-    ; computes final integer using digits
-_intAssembly:
-    mov rcx, [digitsIndex] ; get pos in buffer
-    xor rax, rax ; zero out rax in case offset >100
-    mov al, BYTE [rcx] ; read current digit value to rax
-    mul rbx ; multiply value by offset
-    mov rdx, rax
-    pop rax ; get current int
-    add rax, rdx ; add value w/ correecet offset to rax 
-    push rax ;save new int again
-    
-    ; increase offset
-    mov rax, rbx
-    mov rdx, 10
-    mul rdx 
-    mov rbx, rax
+done:
+    dec ecx
+    mov [charsPtr], ecx
+    mov ebx, 1 ; запоминаем 10 в степени n
+    mov eax, 0
+    push rax
 
-    ; move ptr
-    dec rcx
-    mov [digitsIndex], rcx
-    cmp rcx, digits
-    jge _intAssembly ; jump if not at begining of buffer 
+makeNumber:
+
+    mov ecx, [charsPtr]
+    mov eax, 0
+    mov al, BYTE [ecx]
+    mul ebx ; умножаем eax на 10 в степени 
+    mov edx, eax
+    pop rax
+    add eax, edx
+    push rax
+
+    ; увеличить степень 10-ки
+    mov eax, ebx
+    mov ebx, 10
+    mul ebx
+    mov ebx, eax
+
+    dec ecx
+    mov [charsPtr], ecx
+    cmp rcx, chars
+    jge makeNumber
 
     pop rax
+
+ret
+
+
+_matrixOutput:
+
+
+ret
+
+_vectorOut:
+
+
 ret
