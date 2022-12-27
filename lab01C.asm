@@ -59,6 +59,8 @@ _start:
     int 80h 
 
 
+
+
 _matrixInput:
 
     ;Ввести размер матрицы
@@ -100,8 +102,60 @@ matLoop:
     cmp ecx, 0
     jne matLoop
 
-    ; ввод самой матрицы 
-    ; числа вводятся по одному на одной строке
-debug:
 
 ret ; выход из _matrixInput
+
+
+
+_charsToInt:
+    mov rcx, digits ; save adress to number integer buffer (destination)
+    mov [tmpPtr], rbx ; save adress to char integer buffer (source)
+
+_stringBreakdownLoop:
+    mov al, BYTE [rbx] ; move to rax val of first char digit
+    cmp al, 0x0A
+    je skip
+    sub eax, 0x30 ; char -> integer
+    mov [rcx], rax ; add int to 
+
+    ; upd source index
+    inc rbx
+    mov [tmpPtr], rbx
+
+    ; upd dest index
+    inc rcx
+    mov [digitsIndex], rcx
+    jmp _stringBreakdownLoop
+
+skip:
+    dec rcx
+    mov [digitsIndex], rcx
+    mov rbx, 1 ; rax stores offset
+    xor rax, rax
+    push rax ; save current int
+
+    ; computes final integer using digits
+_intAssembly:
+    mov rcx, [digitsIndex] ; get pos in buffer
+    xor rax, rax ; zero out rax in case offset >100
+    mov al, BYTE [rcx] ; read current digit value to rax
+    mul rbx ; multiply value by offset
+    mov rdx, rax
+    pop rax ; get current int
+    add rax, rdx ; add value w/ correecet offset to rax 
+    push rax ;save new int again
+    
+    ; increase offset
+    mov rax, rbx
+    mov rdx, 10
+    mul rdx 
+    mov rbx, rax
+
+    ; move ptr
+    dec rcx
+    mov [digitsIndex], rcx
+    cmp rcx, digits
+    jge _intAssembly ; jump if not at begining of buffer 
+
+    pop rax
+ret
