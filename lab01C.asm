@@ -180,7 +180,8 @@ makeNumber:
 ret
 
 _getVector:
-    
+    mov rax, matPtr
+    mov [matPtr], rax
 ret
 
 
